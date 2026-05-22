@@ -17,6 +17,7 @@ interface Entrega {
   observacoes: string | null
   numero_motoboy: number | null
   motoboy_confirmado: boolean
+  cancelada: boolean
 }
 
 const FORMA_LABEL: Record<string, string> = {
@@ -41,6 +42,7 @@ export default function TabelaPage() {
   const [numeroMotoboy, setNumeroMotoboy] = useState('')
   const [motoboyConfirmado, setMotoboyConfirmado] = useState(false)
   const [salvando, setSalvando] = useState(false)
+  const [confirmandoDelete, setConfirmandoDelete] = useState(false)
 
   const hoje = new Date().toLocaleDateString('pt-BR', {
     weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
@@ -65,6 +67,12 @@ export default function TabelaPage() {
     setObservacoes(e.observacoes || '')
     setNumeroMotoboy(e.numero_motoboy ? String(e.numero_motoboy) : '')
     setMotoboyConfirmado(e.motoboy_confirmado)
+    setConfirmandoDelete(false)
+  }
+
+  function fecharModal() {
+    setModalEntrega(null)
+    setConfirmandoDelete(false)
   }
 
   async function handleSalvarModal() {
@@ -78,8 +86,36 @@ export default function TabelaPage() {
       motoboy_confirmado: motoboyConfirmado,
     }).eq('id', modalEntrega.id)
     setSalvando(false)
-    setModalEntrega(null)
+    fecharModal()
     carregar()
+  }
+
+  async function handleCancelarEntrega() {
+    if (!modalEntrega) return
+    setSalvando(true)
+    const supabase = createClient()
+    await supabase.from('entregas').update({
+      cancelada: !modalEntrega.cancelada,
+    }).eq('id', modalEntrega.id)
+    setSalvando(false)
+    fecharModal()
+    carregar()
+  }
+
+  async function handleDeletarEntrega() {
+    if (!modalEntrega) return
+    setSalvando(true)
+    const supabase = createClient()
+    await supabase.from('entregas').delete().eq('id', modalEntrega.id)
+    setSalvando(false)
+    fecharModal()
+    carregar()
+  }
+
+  function cardStyle(e: Entrega) {
+    if (e.cancelada) return 'bg-[#1a0a0a] border-[#5a1a1a] hover:border-[#8a2a2a]'
+    if (e.motoboy_confirmado) return 'bg-[#0a1a0a] border-[#1a4a1a] hover:border-[#2a6a2a]'
+    return 'bg-[#1a1a1a] border-[#2a2a2a] hover:border-[#F5A623]'
   }
 
   const inputClass = "w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white text-sm placeholder-[#444] focus:outline-none focus:border-[#F5A623] transition-colors"
@@ -119,7 +155,11 @@ export default function TabelaPage() {
         ) : (
           <div className="flex flex-col gap-3">
             {entregas.map((e) => (
-              <button key={e.id} onClick={() => abrirModal(e)} className="bg-[#1a1a1a] border border-[#2a2a2a] hover:border-[#F5A623] rounded-2xl p-4 text-left transition-colors w-full">
+              <button
+                key={e.id}
+                onClick={() => abrirModal(e)}
+                className={`border rounded-2xl p-4 text-left transition-colors w-full ${cardStyle(e)}`}
+              >
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <div>
                     <p className="text-white font-semibold text-sm">
@@ -127,9 +167,12 @@ export default function TabelaPage() {
                     </p>
                     <p className="text-[#666] text-xs mt-0.5">{e.operador_nome} · {e.horario.slice(0, 5)}</p>
                   </div>
-                  <p className="text-[#F5A623] font-bold text-sm whitespace-nowrap">
-                    R$ {Number(e.valor).toFixed(2).replace('.', ',')}
-                  </p>
+                  <div className="flex flex-col items-end gap-1">
+                    <p className="text-[#F5A623] font-bold text-sm whitespace-nowrap">
+                      R$ {Number(e.valor).toFixed(2).replace('.', ',')}
+                    </p>
+                    {e.cancelada && <span className="text-[#e05555] text-xs font-semibold">Cancelada</span>}
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <span className="bg-[#2a2a2a] text-[#aaa] text-xs px-2.5 py-1 rounded-lg">{FORMA_LABEL[e.forma_pagamento]}</span>
@@ -149,7 +192,7 @@ export default function TabelaPage() {
       </div>
 
       {modalEntrega && (
-        <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 px-4 pb-4 sm:pb-0" onClick={() => setModalEntrega(null)}>
+        <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 px-4 pb-4 sm:pb-0" onClick={fecharModal}>
           <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl w-full max-w-lg p-6 flex flex-col gap-4" onClick={e => e.stopPropagation()}>
 
             <div className="flex items-center justify-between">
@@ -157,7 +200,7 @@ export default function TabelaPage() {
                 <p className="text-white font-bold">{modalEntrega.operador_nome} · {modalEntrega.horario.slice(0, 5)}</p>
                 <p className="text-[#F5A623] font-bold">R$ {Number(modalEntrega.valor).toFixed(2).replace('.', ',')}</p>
               </div>
-              <button onClick={() => setModalEntrega(null)} className="text-[#666] hover:text-white transition-colors">
+              <button onClick={fecharModal} className="text-[#666] hover:text-white transition-colors">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 6L6 18M6 6l12 12"/>
                 </svg>
@@ -191,6 +234,36 @@ export default function TabelaPage() {
               className="w-full bg-[#F5A623] hover:bg-[#e09b1a] text-[#1a1a1a] font-bold py-3 rounded-xl text-sm transition-colors disabled:opacity-60">
               {salvando ? 'Salvando...' : 'Salvar alterações'}
             </button>
+
+            <div className="flex gap-2">
+              <button
+                onClick={handleCancelarEntrega}
+                disabled={salvando}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-colors disabled:opacity-60 ${
+                  modalEntrega.cancelada
+                    ? 'border-[#2a4a2a] text-[#4ade80] hover:bg-[#0a1a0a]'
+                    : 'border-[#4a2a2a] text-[#e05555] hover:bg-[#1a0a0a]'
+                }`}>
+                {modalEntrega.cancelada ? 'Desfazer cancelamento' : 'Cancelar entrega'}
+              </button>
+
+              {!confirmandoDelete ? (
+                <button
+                  onClick={() => setConfirmandoDelete(true)}
+                  disabled={salvando}
+                  className="px-4 py-2.5 rounded-xl text-sm font-semibold border border-[#3a3a3a] text-[#666] hover:border-[#e05555] hover:text-[#e05555] transition-colors disabled:opacity-60">
+                  Deletar
+                </button>
+              ) : (
+                <button
+                  onClick={handleDeletarEntrega}
+                  disabled={salvando}
+                  className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-[#e05555] text-white hover:bg-[#c04444] transition-colors disabled:opacity-60">
+                  Confirmar
+                </button>
+              )}
+            </div>
+
           </div>
         </div>
       )}
