@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MotoLog 🛵
 
-## Getting Started
+![Status do Projeto](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
+![Next.js](https://img.shields.io/badge/Next.js-000000?logo=next.js&logoColor=white)
+![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Tailwind](https://img.shields.io/badge/Tailwind_CSS-38B2AC?logo=tailwind-css&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?logo=supabase&logoColor=white)
 
-First, run the development server:
+> Aplicação web para registro e controle de entregas de motoboy, desenvolvida com Next.js, React.js, TypeScript, Tailwind CSS e Supabase. Substituindo papel e caneta por um sistema digital com autenticação, CRUD completo e histórico por dia.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 📖 Sobre o Projeto
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+No trabalho como operadora de caixa, o controle de entregas era feito à mão em papel — anotando horário, valor, forma de pagamento e qual motoboy acertou cada entrega. Decidi automatizar esse processo como projeto prático para aprender desenvolvimento full-stack.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+O MotoLog permite registrar entregas do dia, consultar o histórico de dias anteriores, marcar acertos com motoboys e dar baixa nas entregas de forma rápida e visual.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+### 🚀 Tecnologias Utilizadas
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Next.js 14 (App Router)
+- React.js
+- TypeScript
+- Tailwind CSS
+- Supabase (banco de dados PostgreSQL + autenticação)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+### 🎮 Funcionalidades
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Autenticação** — login e cadastro com Supabase Auth
+- **Nova tabela diária** — uma tabela por dia, com bloqueio de duplicatas
+- **Registro de entregas** — operador, horário, valor, forma de pagamento, troco e receita
+- **Tabela de hoje** — visualização e edição das entregas do dia em tempo real
+- **Histórico** — consulta de tabelas de dias anteriores com edição
+- **Dar baixa** — visualização compacta focada em horário, valor, forma de pagamento e motoboy para agilizar baixas no sistema da empresa
+- **Status visual** — cards verdes para entregas confirmadas com motoboy, vermelhos para canceladas
+- **CRUD completo** — editar, cancelar e deletar entregas com confirmação
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+### 🧠 Aprendizados
+
+- Estruturação de banco de dados relacional com PostgreSQL via Supabase
+- Row Level Security (RLS) para controle de acesso por usuário
+- Roteamento dinâmico com App Router do Next.js
+- Tipagem estática com TypeScript em componentes React e chamadas ao Supabase
+- Componentização reutilizável (ex: `ListaDias` compartilhado entre histórico e dar baixa)
+- Gerenciamento de estado local com `useState` e `useEffect`
+- Operações de CRUD com o cliente Supabase no lado do cliente
+
+---
+
+### 🐛 Desafios e Soluções
+
+- **`invalid input syntax for type uuid: "hoje"`** — ao clicar em "Nova tabela diária" ou "Tabela de hoje", o app navegava para `/tabela/nova` e `/tabela/hoje` usando strings literais na URL. Quando a tela de nova entrega tentava salvar, o campo `tabela_id` chegava como `"hoje"` para o Supabase, que rejeitava por não ser um UUID válido. Resolvido criando as funções `handleNovaTabela` e `handleTabelaHoje` no dashboard, que primeiro fazem uma operação real no Supabase — inserindo ou buscando um registro em `tabelas_diarias` — e só então navegam para `/tabela/[uuid-real]`. O botão "Tabela de hoje" também ganhou lógica de upsert para evitar duplicatas.
+- **Tabelas diárias duplicadas** — sem proteção, clicar várias vezes em "Nova tabela diária" criava múltiplos registros para o mesmo dia. Resolvido verificando se já existe uma tabela com a data de hoje antes de inserir, e exibindo um aviso caso já exista.
+
+---
+
+### 🗄️ Estrutura do Banco de Dados
+
+- **profiles** — dados do usuário (nome, role, número de motoboy)
+- **tabelas_diarias** — uma tabela por dia por operador
+- **entregas** — entregas vinculadas a uma tabela diária
+
+---
+
+© 2026 Ana Ananias. Todos os direitos reservados.
