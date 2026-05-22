@@ -8,8 +8,8 @@ export default function DashboardPage() {
   const router = useRouter()
   const [primeiroNome, setPrimeiroNome] = useState('')
   const [userId, setUserId] = useState('')
-  const [loadingNova, setLoadingNova] = useState(false)
-  const [loadingHoje, setLoadingHoje] = useState(false)
+  const [loading, setLoading] = useState<'nova' | 'hoje' | null>(null)
+  const [aviso, setAviso] = useState('')
 
   useEffect(() => {
     async function getUser() {
@@ -31,27 +31,12 @@ export default function DashboardPage() {
 
   async function handleNovaTabela() {
     if (!userId) return
-    setLoadingNova(true)
-    const supabase = createClient()
-    const hoje = new Date().toISOString().slice(0, 10) // "2026-05-22"
-
-    const { data, error } = await supabase
-      .from('tabelas_diarias')
-      .insert({ data: hoje, criado_por: userId })
-      .select('id')
-      .single()
-
-    if (error || !data) { setLoadingNova(false); alert('Erro ao criar tabela.'); return }
-    router.push(`/tabela/${data.id}`)
-  }
-
-  async function handleTabelaHoje() {
-    if (!userId) return
-    setLoadingHoje(true)
+    setAviso('')
+    setLoading('nova')
     const supabase = createClient()
     const hoje = new Date().toISOString().slice(0, 10)
 
-    // Tenta buscar tabela de hoje
+    // Bloqueia se já existe tabela hoje
     const { data: existente } = await supabase
       .from('tabelas_diarias')
       .select('id')
@@ -60,19 +45,47 @@ export default function DashboardPage() {
       .maybeSingle()
 
     if (existente) {
-      router.push(`/tabela/${existente.id}`)
+      setAviso('Você já tem uma tabela para hoje. Use "Tabela de hoje" para acessá-la.')
+      setLoading(null)
       return
     }
 
-    // Se não existe, cria
-    const { data: nova, error } = await supabase
+    const { data, error } = await supabase
       .from('tabelas_diarias')
       .insert({ data: hoje, criado_por: userId })
       .select('id')
       .single()
 
-    if (error || !nova) { setLoadingHoje(false); alert('Erro ao abrir tabela.'); return }
-    router.push(`/tabela/${nova.id}`)
+    if (error || !data) {
+      setAviso('Erro ao criar tabela. Tente novamente.')
+      setLoading(null)
+      return
+    }
+
+    router.push(`/tabela/${data.id}`)
+  }
+
+  async function handleTabelaHoje() {
+    if (!userId) return
+    setAviso('')
+    setLoading('hoje')
+    const supabase = createClient()
+    const hoje = new Date().toISOString().slice(0, 10)
+
+    const { data: existente } = await supabase
+      .from('tabelas_diarias')
+      .select('id')
+      .eq('data', hoje)
+      .eq('criado_por', userId)
+      .maybeSingle()
+
+    if (!existente) {
+      setAviso('Nenhuma tabela criada hoje ainda. Use "Nova tabela diária" para começar.')
+      setLoading(null)
+      return
+    }
+
+    router.push(`/tabela/${existente.id}`)
   }
 
   const iniciais = primeiroNome.slice(0, 2).toUpperCase()
@@ -99,16 +112,15 @@ export default function DashboardPage() {
 
       <div className="max-w-lg mx-auto px-6 py-10">
         <div className="mb-10">
-          <h2 className="text-white text-2xl font-bold">
-            Bem-vindo(a), {primeiroNome}!
-          </h2>
+          <h2 className="text-white text-2xl font-bold">Bem-vindo(a), {primeiroNome}!</h2>
           <p className="text-[#666] text-sm mt-1">O que vamos fazer hoje?</p>
         </div>
 
         <div className="flex flex-col gap-3">
+
           <button
             onClick={handleNovaTabela}
-            disabled={loadingNova}
+            disabled={!!loading}
             className="bg-[#1a1a1a] border border-[#2a2a2a] hover:border-[#F5A623] rounded-2xl p-5 flex items-center gap-4 transition-colors text-left group disabled:opacity-60"
           >
             <div className="w-11 h-11 rounded-xl bg-[#2a1f00] flex items-center justify-center flex-shrink-0">
@@ -118,7 +130,7 @@ export default function DashboardPage() {
             </div>
             <div>
               <p className="text-white font-semibold text-sm">
-                {loadingNova ? 'Criando...' : 'Nova tabela diária'}
+                {loading === 'nova' ? 'Criando...' : 'Nova tabela diária'}
               </p>
               <p className="text-[#666] text-xs mt-0.5">Iniciar o registro de entregas de hoje</p>
             </div>
@@ -127,7 +139,7 @@ export default function DashboardPage() {
 
           <button
             onClick={handleTabelaHoje}
-            disabled={loadingHoje}
+            disabled={!!loading}
             className="bg-[#1a1a1a] border border-[#2a2a2a] hover:border-[#F5A623] rounded-2xl p-5 flex items-center gap-4 transition-colors text-left group disabled:opacity-60"
           >
             <div className="w-11 h-11 rounded-xl bg-[#2a1f00] flex items-center justify-center flex-shrink-0">
@@ -138,7 +150,7 @@ export default function DashboardPage() {
             </div>
             <div>
               <p className="text-white font-semibold text-sm">
-                {loadingHoje ? 'Abrindo...' : 'Tabela de hoje'}
+                {loading === 'hoje' ? 'Abrindo...' : 'Tabela de hoje'}
               </p>
               <p className="text-[#666] text-xs mt-0.5">Acessar e adicionar entregas do dia</p>
             </div>
@@ -161,7 +173,14 @@ export default function DashboardPage() {
             </div>
             <span className="ml-auto text-[#444] group-hover:text-white text-xl transition-colors">›</span>
           </button>
+
         </div>
+
+        {aviso && (
+          <div className="mt-6 bg-[#1a1a1a] border border-[#F5A623]/30 rounded-xl px-4 py-3">
+            <p className="text-[#F5A623] text-sm">{aviso}</p>
+          </div>
+        )}
       </div>
     </main>
   )
