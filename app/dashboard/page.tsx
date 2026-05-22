@@ -36,7 +36,6 @@ export default function DashboardPage() {
     const supabase = createClient()
     const hoje = new Date().toISOString().slice(0, 10)
 
-    // Bloqueia se já existe tabela hoje
     const { data: existente } = await supabase
       .from('tabelas_diarias')
       .select('id')
@@ -155,6 +154,23 @@ export default function DashboardPage() {
               <p className="text-[#666] text-xs mt-0.5">Acessar e adicionar entregas do dia</p>
             </div>
             <span className="ml-auto text-[#444] group-hover:text-[#F5A623] text-xl transition-colors">›</span>
+          </button>
+
+          <button
+            onClick={() => router.push('/baixa')}
+            className="bg-[#1a1a1a] border border-[#2a2a2a] hover:border-[#88E788] rounded-2xl p-5 flex items-center gap-4 transition-colors text-left group"
+          >
+            <div className="w-11 h-11 rounded-xl bg-[#1f1f1f] flex items-center justify-center flex-shrink-0">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#88E788" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 11l3 3L22 4"/>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+              </svg>
+            </div>
+            <div>
+              <p className="text-white font-semibold text-sm">Dar baixa em entregas</p>
+              <p className="text-[#666] text-xs mt-0.5">Conferir motoboys e abater entregas</p>
+            </div>
+            <span className="ml-auto text-[#444] group-hover:text-white text-xl transition-colors">›</span>
           </button>
 
           <button
