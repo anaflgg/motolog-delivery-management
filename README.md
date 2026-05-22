@@ -1,6 +1,6 @@
 # MotoLog 🛵
 
-![Status do Projeto](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
+![Status do Projeto](https://img.shields.io/badge/status-concluído-brightgreen)
 ![Next.js](https://img.shields.io/badge/Next.js-000000?logo=next.js&logoColor=white)
 ![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
