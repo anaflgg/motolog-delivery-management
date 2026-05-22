@@ -9,6 +9,14 @@
 
 > Aplicação web para registro e controle de entregas de motoboy, desenvolvida com Next.js, React.js, TypeScript, Tailwind CSS e Supabase. Substituindo papel e caneta por um sistema digital com autenticação, CRUD completo e histórico por dia.
 
+### ✨ [Veja o projeto ao vivo aqui!](https://motolog-delivery-management.vercel.app/login)
+
+---
+
+### 📸 Screenshot
+
+![Dashboard Screenshot](./assets/print-dashaboard.png)
+
 ---
 
 ### 📖 Sobre o Projeto
