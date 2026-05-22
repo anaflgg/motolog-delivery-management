@@ -54,7 +54,7 @@ export default function TabelaPage() {
       .from('entregas')
       .select('*')
       .eq('tabela_id', id)
-      .order('horario')
+      .order('horario', { ascending: false })
     if (data) setEntregas(data)
     setLoading(false)
   }
