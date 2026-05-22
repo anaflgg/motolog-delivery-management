@@ -7,6 +7,9 @@ import { createClient } from '@/lib/supabase'
 export default function DashboardPage() {
   const router = useRouter()
   const [primeiroNome, setPrimeiroNome] = useState('')
+  const [userId, setUserId] = useState('')
+  const [loadingNova, setLoadingNova] = useState(false)
+  const [loadingHoje, setLoadingHoje] = useState(false)
 
   useEffect(() => {
     async function getUser() {
@@ -15,6 +18,7 @@ export default function DashboardPage() {
       if (!user) { router.push('/login'); return }
       const nomeCompleto = user.user_metadata?.nome || user.email || ''
       setPrimeiroNome(nomeCompleto.split(' ')[0])
+      setUserId(user.id)
     }
     getUser()
   }, [router])
@@ -23,6 +27,52 @@ export default function DashboardPage() {
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push('/login')
+  }
+
+  async function handleNovaTabela() {
+    if (!userId) return
+    setLoadingNova(true)
+    const supabase = createClient()
+    const hoje = new Date().toISOString().slice(0, 10) // "2026-05-22"
+
+    const { data, error } = await supabase
+      .from('tabelas_diarias')
+      .insert({ data: hoje, criado_por: userId })
+      .select('id')
+      .single()
+
+    if (error || !data) { setLoadingNova(false); alert('Erro ao criar tabela.'); return }
+    router.push(`/tabela/${data.id}`)
+  }
+
+  async function handleTabelaHoje() {
+    if (!userId) return
+    setLoadingHoje(true)
+    const supabase = createClient()
+    const hoje = new Date().toISOString().slice(0, 10)
+
+    // Tenta buscar tabela de hoje
+    const { data: existente } = await supabase
+      .from('tabelas_diarias')
+      .select('id')
+      .eq('data', hoje)
+      .eq('criado_por', userId)
+      .maybeSingle()
+
+    if (existente) {
+      router.push(`/tabela/${existente.id}`)
+      return
+    }
+
+    // Se não existe, cria
+    const { data: nova, error } = await supabase
+      .from('tabelas_diarias')
+      .insert({ data: hoje, criado_por: userId })
+      .select('id')
+      .single()
+
+    if (error || !nova) { setLoadingHoje(false); alert('Erro ao abrir tabela.'); return }
+    router.push(`/tabela/${nova.id}`)
   }
 
   const iniciais = primeiroNome.slice(0, 2).toUpperCase()
@@ -57,8 +107,9 @@ export default function DashboardPage() {
 
         <div className="flex flex-col gap-3">
           <button
-            onClick={() => router.push('/tabela/nova')}
-            className="bg-[#1a1a1a] border border-[#2a2a2a] hover:border-[#F5A623] rounded-2xl p-5 flex items-center gap-4 transition-colors text-left group"
+            onClick={handleNovaTabela}
+            disabled={loadingNova}
+            className="bg-[#1a1a1a] border border-[#2a2a2a] hover:border-[#F5A623] rounded-2xl p-5 flex items-center gap-4 transition-colors text-left group disabled:opacity-60"
           >
             <div className="w-11 h-11 rounded-xl bg-[#2a1f00] flex items-center justify-center flex-shrink-0">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F5A623" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -66,15 +117,18 @@ export default function DashboardPage() {
               </svg>
             </div>
             <div>
-              <p className="text-white font-semibold text-sm">Nova tabela diária</p>
+              <p className="text-white font-semibold text-sm">
+                {loadingNova ? 'Criando...' : 'Nova tabela diária'}
+              </p>
               <p className="text-[#666] text-xs mt-0.5">Iniciar o registro de entregas de hoje</p>
             </div>
             <span className="ml-auto text-[#444] group-hover:text-[#F5A623] text-xl transition-colors">›</span>
           </button>
 
           <button
-            onClick={() => router.push('/tabela/hoje')}
-            className="bg-[#1a1a1a] border border-[#2a2a2a] hover:border-[#F5A623] rounded-2xl p-5 flex items-center gap-4 transition-colors text-left group"
+            onClick={handleTabelaHoje}
+            disabled={loadingHoje}
+            className="bg-[#1a1a1a] border border-[#2a2a2a] hover:border-[#F5A623] rounded-2xl p-5 flex items-center gap-4 transition-colors text-left group disabled:opacity-60"
           >
             <div className="w-11 h-11 rounded-xl bg-[#2a1f00] flex items-center justify-center flex-shrink-0">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F5A623" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -83,7 +137,9 @@ export default function DashboardPage() {
               </svg>
             </div>
             <div>
-              <p className="text-white font-semibold text-sm">Tabela de hoje</p>
+              <p className="text-white font-semibold text-sm">
+                {loadingHoje ? 'Abrindo...' : 'Tabela de hoje'}
+              </p>
               <p className="text-[#666] text-xs mt-0.5">Acessar e adicionar entregas do dia</p>
             </div>
             <span className="ml-auto text-[#444] group-hover:text-[#F5A623] text-xl transition-colors">›</span>
