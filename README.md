@@ -21,7 +21,11 @@
 
 ### 📖 Sobre o Projeto
 
-No trabalho como operadora de caixa, o controle de entregas era feito à mão em papel — anotando horário, valor, forma de pagamento e qual motoboy acertou cada entrega. Decidi automatizar esse processo como projeto prático para aprender desenvolvimento full-stack.
+No trabalho como operadora de caixa, o controle de entregas era feito à mão em papel — anotando horário, valor, forma de pagamento e qual motoboy acertou cada entrega. Essa é a folha real que usávamos:
+
+![Folha de entregas real](./assets/folha-entregas.jpeg)
+
+Decidi automatizar esse processo como projeto prático para aprender desenvolvimento full-stack. O MotoLog resolve exatamente esse problema: substituir essa folha por um sistema digital acessível de qualquer dispositivo.
 
 O MotoLog permite registrar entregas do dia, consultar o histórico de dias anteriores, marcar acertos com motoboys e dar baixa nas entregas de forma rápida e visual.
 
