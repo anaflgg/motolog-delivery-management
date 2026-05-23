@@ -176,7 +176,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-[#444] text-xs mt-6">
-          MotoLog © 2026 — Uso interno
+          MotoLog © 2026 — Desenvolvido por Ana Ananias
         </p>
       </div>
     </main>
