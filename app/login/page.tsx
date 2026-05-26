@@ -154,9 +154,9 @@ export default function LoginPage() {
 
             {tab === 'login' && (
               <div className="text-right -mt-2">
-                <span className="text-[#F5A623] text-sm cursor-pointer hover:underline">
+                <button onClick={() => router.push('/esqueceu-senha')} className="text-[#F5A623] text-sm cursor-pointer hover:underline">
                   Esqueceu a senha?
-                </span>
+                </button>
               </div>
             )}
 
